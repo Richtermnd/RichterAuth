@@ -63,7 +63,7 @@ func (r *UserRepo) SaveUser(ctx context.Context, user models.User) (int, error) 
 	return id, nil
 }
 
-func (r *UserRepo) User(ctx context.Context, email string) (models.User, error) {
+func (r *UserRepo) UserByEmail(ctx context.Context, email string) (models.User, error) {
 	// Get user
 	stmt, args, err := r.builder.
 		Select(
@@ -116,6 +116,79 @@ func (r *UserRepo) User(ctx context.Context, email string) (models.User, error) 
 	}
 	user.ConfirmKey = confirmKey
 	return user, nil
+}
+
+func (r *UserRepo) UserById(ctx context.Context, id int) (models.User, error) {
+	// Get user
+	stmt, args, err := r.builder.
+		Select(
+			"u.id as id",
+			"u.username as username",
+			"u.email as email",
+			"u.hashed_password as hashed_password",
+			"u.registered_at as registered_at",
+			"u.is_active as is_active",
+			"u.is_confirmed as is_confirmed",
+			"r.name as role",
+		).
+		From("users as u").
+		Join("roles as r on r.id = u.role_id").
+		Where(sq.Eq{"u.id": id}).
+		ToSql()
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return models.User{}, errs.ErrInternal(err)
+	}
+
+	var user models.User
+	err = r.db.GetContext(ctx, &user, stmt, args...)
+	// Handle not found
+	if errors.Is(err, sql.ErrNoRows) {
+		return models.User{}, errs.ErrNotFound("user not found", err)
+	} else if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return models.User{}, errs.ErrInternal(err)
+	}
+
+	// Get confirm key
+	stmt, args, err = r.builder.
+		Select(
+			"confirm_key",
+			"expired_at",
+		).
+		From("confirm_keys").
+		Where(sq.Eq{"user_id": user.Id}).
+		ToSql()
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return models.User{}, errs.ErrInternal(err)
+	}
+	var confirmKey models.ConfirmKey
+	err = r.db.GetContext(ctx, &confirmKey, stmt, args...)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return models.User{}, errs.ErrInternal(err)
+	}
+	user.ConfirmKey = confirmKey
+	return user, nil
+}
+
+func (r *UserRepo) ConfirmUser(ctx context.Context, id int) error {
+	stmt, args, err := r.builder.
+		Update("users").
+		SetMap(map[string]interface{}{
+			"is_confirmed": true,
+		}).
+		Where(sq.Eq{"id": id}).
+		ToSql()
+	if err != nil {
+		return errs.ErrInternal(err)
+	}
+	_, err = r.db.ExecContext(ctx, stmt, args...)
+	if err != nil {
+		return errs.ErrInternal(err)
+	}
+	return nil
 }
 
 func (r *UserRepo) uploadRoles(ctx context.Context) {

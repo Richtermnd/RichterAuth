@@ -15,7 +15,7 @@ type ContextKey string
 const Key = ContextKey("user")
 
 type TokenPayload struct {
-	ID       string
+	ID       int
 	Username string
 	Role     string
 	Exp      int64 // Unix timestamp
@@ -57,7 +57,7 @@ func MiddlwareJWT(publicKey *rsa.PublicKey) func(http.Handler) http.Handler {
 			}
 
 			user := TokenPayload{
-				ID:       claims["id"].(string),
+				ID:       int(claims["id"].(float64)),
 				Username: claims["username"].(string),
 				Role:     claims["role"].(string),
 				Exp:      int64(claims["exp"].(float64)),

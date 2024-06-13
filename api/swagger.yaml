@@ -1,8 +1,8 @@
-openapi: '3.0.1'
+openapi: "3.0.1"
 
 info:
   title: API
-  version: '1.0.0'
+  version: "1.0.0"
 
 paths:
   /register:
@@ -14,11 +14,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Register'
+              $ref: "#/components/schemas/Register"
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
 
   /login:
@@ -30,37 +30,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Login'
+              $ref: "#/components/schemas/Login"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Token'
-        '400':
+                $ref: "#/components/schemas/Token"
+        "400":
           description: Bad Request
-        '401':
+        "401":
           description: Unauthorized
-  /confirm:
+  /{id}/confirm/{key}:
     get:
       summary: Confirm
       description: Confirm
       parameters:
-        - in: query
+        - in: path
+          required: true
           name: id
           schema:
             type: string
-        - in: query
-          name: confirmKey
+        - in: path
+          required: true
+          name: key
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
-        '401':
+        "401":
           description: Unauthorized
   /reset-password:
     post:
@@ -71,15 +73,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ResetPassword'
+              $ref: "#/components/schemas/ResetPassword"
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
-        '401':
+        "401":
           description: Unauthorized
-
 
 components:
   schemas:
@@ -94,7 +95,7 @@ components:
           type: string
         repeatPassword:
           type: string
-    
+
     Login:
       type: object
       properties:
@@ -108,7 +109,7 @@ components:
       properties:
         token:
           type: string
-    
+
     ResetPassword:
       type: object
       properties:

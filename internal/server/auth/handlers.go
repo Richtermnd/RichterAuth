@@ -32,3 +32,14 @@ func (m *Router) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	utils.Encode(w, r, token)
 }
+
+func (m *Router) Confirm(w http.ResponseWriter, r *http.Request) {
+	var confirmRequest requests.Confirm
+	goreq.Decode(r, &confirmRequest)
+	err := m.userService.Confirm(r.Context(), confirmRequest)
+	if err != nil {
+		utils.Encode(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

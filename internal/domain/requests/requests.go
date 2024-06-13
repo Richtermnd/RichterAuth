@@ -17,3 +17,8 @@ type ResetPassword struct {
 	NewPassword    string `json:"newPassword"`
 	RepeatPassword string `json:"repeatPassword"`
 }
+
+type Confirm struct {
+	Id  int    `path:"id"`
+	Key string `path:"key"`
+}

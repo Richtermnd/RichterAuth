@@ -12,7 +12,7 @@ type UserService interface {
 	Register(ctx context.Context, user requests.Register) error
 	Login(ctx context.Context, login requests.Login) (responses.Token, error)
 	// ResetPassword(ctx context.Context, id string, resetPassword requests.ResetPassword) error
-	// ConfirmUser(ctx context.Context, id string, confirmKey string) error
+	Confirm(ctx context.Context, confirm requests.Confirm) error
 }
 
 type Router struct {
@@ -25,4 +25,6 @@ func Register(mux *routegroup.Bundle, userService UserService) {
 	r := &Router{mux: mux, userService: userService}
 	r.mux.HandleFunc("POST /register", r.Register)
 	r.mux.HandleFunc("POST /login", r.Login)
+	r.mux.HandleFunc("GET /{id}/confirm/{key}", r.Confirm)
+
 }

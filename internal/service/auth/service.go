@@ -14,7 +14,9 @@ import (
 type UserRepo interface {
 	SaveUser(ctx context.Context, user models.User) (int, error)
 	SaveConfirmKey(ctx context.Context, confirmKey models.ConfirmKey, userId int) error
-	User(ctx context.Context, email string) (models.User, error)
+	UserByEmail(ctx context.Context, email string) (models.User, error)
+	UserById(ctx context.Context, id int) (models.User, error)
+	ConfirmUser(ctx context.Context, id int) error
 }
 
 type Service struct {
@@ -31,7 +33,7 @@ func (s *Service) Register(ctx context.Context, registerRequest requests.Registe
 	log := s.log.With(slog.String("op", op))
 
 	// check exists
-	user, err := s.userRepo.User(ctx, registerRequest.Email)
+	user, err := s.userRepo.UserByEmail(ctx, registerRequest.Email)
 	if err == nil {
 		log.Error("user already exists", "err", err)
 		return errs.ErrBadRequest("User already exists", nil)
@@ -89,8 +91,9 @@ func (s *Service) Login(ctx context.Context, loginRequest requests.Login) (respo
 	log := s.log.With(slog.String("op", op))
 
 	log.Info("Login user")
-	user, err := s.userRepo.User(ctx, loginRequest.Email)
+	user, err := s.userRepo.UserByEmail(ctx, loginRequest.Email)
 	if err != nil {
+		log.Error("failed to get user", "err", err)
 		return responses.Token{}, err
 	}
 
@@ -104,4 +107,31 @@ func (s *Service) Login(ctx context.Context, loginRequest requests.Login) (respo
 	token := generateToken(user.Id, user.Email, user.Role)
 	return responses.Token{Token: token}, nil
 
+}
+
+func (s *Service) Confirm(ctx context.Context, confirmRequest requests.Confirm) error {
+	const op = "auth.service.Confirm"
+	log := s.log.With(slog.String("op", op))
+
+	user, err := s.userRepo.UserById(ctx, confirmRequest.Id)
+	if err != nil {
+		log.Error("failed to get user", "err", err)
+		return err
+	}
+	if user.ConfirmKey.ExpiredAt.Before(time.Now()) {
+		log.Error("confirm key expired", "err", err)
+		return errs.ErrBadRequest("Confirm key expired", nil)
+	}
+
+	if user.ConfirmKey.ConfirmKey != confirmRequest.Key {
+		log.Error("invalid confirm key", "err", err)
+		return errs.ErrBadRequest("Invalid confirm key", nil)
+	}
+
+	err = s.userRepo.ConfirmUser(ctx, confirmRequest.Id)
+	if err != nil {
+		log.Error("failed to confirm user", "err", err)
+		return err
+	}
+	return nil
 }
