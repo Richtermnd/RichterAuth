@@ -1,0 +1,120 @@
+openapi: '3.0.1'
+
+info:
+  title: API
+  version: '1.0.0'
+
+paths:
+  /register:
+    post:
+      summary: Register
+      description: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+
+  /login:
+    post:
+      summary: Login
+      description: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+  /confirm:
+    get:
+      summary: Confirm
+      description: Confirm
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+        - in: query
+          name: confirmKey
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+  /reset-password:
+    post:
+      summary: Reset Password
+      description: Reset Password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+
+
+components:
+  schemas:
+    Register:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        repeatPassword:
+          type: string
+    
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+    
+    ResetPassword:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+        repeatPassword:
+          type: string

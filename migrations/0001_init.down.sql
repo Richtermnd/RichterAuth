@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS confirm_keys;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
